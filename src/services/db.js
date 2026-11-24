@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { DEFAULT_FIREBASE_CONFIG } from '../firebaseConfig';
 
 const CONFIG_STORAGE_KEY = 'panorama2027_firebase_config_v1';
 
@@ -19,11 +20,9 @@ function notifyStatusListeners(status) {
 export function getSavedFirebaseConfig() {
   try {
     const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch (_e) {
-    return null;
-  }
+    if (raw) return JSON.parse(raw);
+  } catch (_e) {}
+  return DEFAULT_FIREBASE_CONFIG || null;
 }
 
 export function initFirebase(config) {
@@ -54,10 +53,10 @@ export function initFirebase(config) {
   }
 }
 
-// Auto-initialize from saved config if present
-const existingConfig = getSavedFirebaseConfig();
-if (existingConfig) {
-  initFirebase(existingConfig);
+// Auto-initialize from default or saved config
+const initialConfig = getSavedFirebaseConfig();
+if (initialConfig) {
+  initFirebase(initialConfig);
 }
 
 export function saveFirebaseConfig(configInput) {
@@ -76,7 +75,6 @@ export function saveFirebaseConfig(configInput) {
     } catch (_e) {
       try {
         // Fallback for JS object syntax: apiKey: "...", authDomain: "..."
-        // Convert non-quoted keys to quoted
         const jsonString = cleaned
           .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
           .replace(/'/g, '"');
@@ -100,9 +98,13 @@ export function saveFirebaseConfig(configInput) {
 
 export function removeFirebaseConfig() {
   localStorage.removeItem(CONFIG_STORAGE_KEY);
-  firestoreInstance = null;
-  currentConfig = null;
-  notifyStatusListeners({ connected: false, error: null, mode: 'local' });
+  if (DEFAULT_FIREBASE_CONFIG) {
+    initFirebase(DEFAULT_FIREBASE_CONFIG);
+  } else {
+    firestoreInstance = null;
+    currentConfig = null;
+    notifyStatusListeners({ connected: false, error: null, mode: 'local' });
+  }
 }
 
 export function subscribeDbStatus(callback) {
@@ -157,7 +159,9 @@ export function useSyncedData(collectionKey, defaultData) {
           }
         } else {
           // Document does not exist yet: initialize it in cloud
-          setDoc(docRef, { items: defaultData, updatedAt: new Date().toISOString() }).catch(() => {});
+          setDoc(docRef, { items: defaultData, updatedAt: new Date().toISOString() }).catch((err) => {
+            console.warn(`Initialisation cloud [${collectionKey}] échouée:`, err);
+          });
         }
       },
       (err) => {
