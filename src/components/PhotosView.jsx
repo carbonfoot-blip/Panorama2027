@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
 import { 
   Camera, Upload, Plus, Film, Image as ImageIcon, 
-  ExternalLink, Trash2, X, Sparkles, Check, Clapperboard, Music, Eye
+  ExternalLink, Trash2, X, Sparkles, Check, Clapperboard, Music, Eye,
+  Edit2, Save, Share2, Video
 } from 'lucide-react';
-import { INITIAL_PHOTOS } from '../data/tripData';
+import { INITIAL_PHOTOS, TRIP_METADATA } from '../data/tripData';
 import { useSyncedData } from '../services/db';
 
 export default function PhotosView() {
   const [photos, setPhotos, isLive] = useSyncedData('photos', INITIAL_PHOTOS);
+  const [albumSettings, setAlbumSettings] = useSyncedData('album_settings', {
+    url: TRIP_METADATA.googlePhotosAlbumUrl
+  });
 
   const [filter, setFilter] = useState('ALL');
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [isEditingAlbumUrl, setIsEditingAlbumUrl] = useState(false);
+  const [tempAlbumUrl, setTempAlbumUrl] = useState(albumSettings?.url || TRIP_METADATA.googlePhotosAlbumUrl);
 
   // New photo state
   const [newTitle, setNewTitle] = useState('');
@@ -21,15 +27,47 @@ export default function PhotosView() {
   const [imageUrl, setImageUrl] = useState('');
   const [imageFilePreview, setImageFilePreview] = useState(null);
 
+  const activeAlbumUrl = albumSettings?.url || TRIP_METADATA.googlePhotosAlbumUrl;
+
+  const handleSaveAlbumUrl = (e) => {
+    e.preventDefault();
+    if (!tempAlbumUrl) return;
+    setAlbumSettings({ ...albumSettings, url: tempAlbumUrl });
+    setIsEditingAlbumUrl(false);
+  };
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImageFilePreview(reader.result);
-        if (!newTitle) {
-          setNewTitle(file.name.replace(/\.[^/.]+$/, ""));
-        }
+        // Compress image via canvas before storing
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1200;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+          setImageFilePreview(compressedDataUrl);
+          if (!newTitle) {
+            setNewTitle(file.name.replace(/\.[^/.]+$/, ""));
+          }
+        };
+        img.src = reader.result;
       };
       reader.readAsDataURL(file);
     }
@@ -84,14 +122,96 @@ export default function PhotosView() {
           </div>
           <h1 className="section-title">Photos &amp; Vidéos du Voyage</h1>
           <p className="section-desc">
-            Consultez les clichés de la montagne, téléversez vos photos prises durant le séjour et préparez le montage vidéo souvenir pour la gang !
+            Consultez les clichés de la montagne, téléversez vos coups de cœur et accédez à l'album partagé Google Photos pour toutes vos vidéos 4K !
           </p>
         </div>
 
         <div className="header-actions-group">
+          <a 
+            href={activeAlbumUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-google-photos-sm"
+          >
+            <Camera size={16} />
+            <span>Album Google Photos</span>
+            <ExternalLink size={13} />
+          </a>
           <button className="btn-primary" onClick={() => setShowUploadModal(true)}>
             <Upload size={18} />
-            <span>Ajouter une photo / vidéo</span>
+            <span>Ajouter un cliché</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Google Photos Shared Album Highlight Card */}
+      <div className="glass-card google-photos-banner mb-6">
+        <div className="google-photos-content">
+          <div className="google-photos-icon-wrapper">
+            <svg className="google-photos-pinwheel" viewBox="0 0 24 24" width="34" height="34">
+              <path fill="#EA4335" d="M12 12V3a9 9 0 0 0-9 9h9z"/>
+              <path fill="#4285F4" d="M12 12h9a9 9 0 0 0-9-9v9z"/>
+              <path fill="#FBBC05" d="M12 12v9a9 9 0 0 0 9-9h-9z"/>
+              <path fill="#34A853" d="M12 12H3a9 9 0 0 0 9 9v-9z"/>
+            </svg>
+          </div>
+          <div className="google-photos-text">
+            <div className="section-badge mb-1 text-emerald-300 bg-emerald-500/10 border-emerald-500/30">
+              <Sparkles size={12} className="inline mr-1" />
+              <span>Stockage Illimité Vidéos &amp; Photos</span>
+            </div>
+            <h3 className="google-photos-title">Album Partagé Officiel Google Photos</h3>
+            <p className="google-photos-desc">
+              Déposez vos vidéos 4K de descentes, vos ralentis dans la poudreuse et toutes vos photos de famille en pleine résolution. Tout le monde (Legaults &amp; Synettes) peut y ajouter des fichiers en direct depuis l'application Google Photos de son iPhone !
+            </p>
+
+            {isEditingAlbumUrl ? (
+              <form onSubmit={handleSaveAlbumUrl} className="mt-3 flex items-center gap-2 flex-wrap">
+                <input 
+                  type="url" 
+                  required
+                  className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white flex-1 min-w-[240px]"
+                  value={tempAlbumUrl}
+                  onChange={(e) => setTempAlbumUrl(e.target.value)}
+                  placeholder="https://photos.app.goo.gl/..."
+                />
+                <button type="submit" className="btn-primary btn-sm flex items-center gap-1">
+                  <Save size={13} />
+                  <span>Enregistrer</span>
+                </button>
+                <button 
+                  type="button" 
+                  className="btn-secondary btn-sm"
+                  onClick={() => setIsEditingAlbumUrl(false)}
+                >
+                  Annuler
+                </button>
+              </form>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="google-photos-actions">
+          <a 
+            href={activeAlbumUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-google-photos"
+          >
+            <Camera size={18} />
+            <span>Ouvrir l'Album Google Photos</span>
+            <ExternalLink size={15} />
+          </a>
+          <button 
+            className="btn-secondary btn-sm"
+            onClick={() => {
+              setTempAlbumUrl(activeAlbumUrl);
+              setIsEditingAlbumUrl(!isEditingAlbumUrl);
+            }}
+            title="Modifier le lien de l'album"
+          >
+            <Edit2 size={13} />
+            <span>Modifier le lien</span>
           </button>
         </div>
       </div>
@@ -105,7 +225,7 @@ export default function PhotosView() {
               className={`cat-pill ${filter === cat ? 'active' : ''}`}
               onClick={() => setFilter(cat)}
             >
-              {cat === 'ALL' ? 'Toutes les photos' : cat} ({photos.filter(p => cat === 'ALL' ? true : p.category === cat).length})
+              {cat === 'ALL' ? 'Tous les clichés' : cat} ({photos.filter(p => cat === 'ALL' ? true : p.category === cat).length})
             </button>
           ))}
         </div>
@@ -241,7 +361,7 @@ export default function PhotosView() {
             <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-700">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Upload size={20} className="text-sky-400" />
-                <span>Ajouter une photo souvenir</span>
+                <span>Ajouter un cliché favori</span>
               </h3>
               <button className="btn-action-icon" onClick={() => setShowUploadModal(false)}>
                 <X size={18} />
@@ -294,17 +414,20 @@ export default function PhotosView() {
 
               {/* Upload file or URL */}
               <div className="form-group">
-                <label>Choisir un fichier image depuis votre appareil :</label>
+                <label>Choisir une photo depuis votre iPhone / PC :</label>
                 <input 
                   type="file" 
                   accept="image/*"
                   onChange={handleFileUpload}
                   className="file-upload-input"
                 />
+                <span className="text-[11px] text-slate-400 mt-1">
+                  (Optimisée et compressée automatiquement pour s'enregistrer dans votre base de données sans ralentir)
+                </span>
               </div>
 
               <div className="text-center text-xs text-slate-400 uppercase tracking-widest my-1">
-                — OU PAR LIEN WEB —
+                — OU PAR LIEN DIRECT —
               </div>
 
               <div className="form-group">
@@ -328,7 +451,7 @@ export default function PhotosView() {
                   Annuler
                 </button>
                 <button type="submit" className="btn-primary">
-                  Publier la photo
+                  Publier dans la galerie
                 </button>
               </div>
             </form>

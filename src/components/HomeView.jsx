@@ -262,6 +262,16 @@ export default function HomeView({ setActiveTab }) {
           </div>
           <div className="resort-links-buttons">
             <a 
+              href={TRIP_METADATA.googlePhotosAlbumUrl}
+              target="_blank" 
+              rel="noreferrer"
+              className="btn-google-photos-sm"
+              title="Ouvrir l'album familial partagé"
+            >
+              <span>📸 Album Partagé Google Photos</span>
+              <ExternalLink size={14} />
+            </a>
+            <a 
               href="https://www.panoramaresort.com/mountain-conditions/webcams/" 
               target="_blank" 
               rel="noreferrer"

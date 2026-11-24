@@ -7,6 +7,7 @@ export const TRIP_METADATA = {
   title: "PANORAMA 2027",
   subtitle: "Voyage de Ski dans les Rocheuses canadiennes",
   destination: "Panorama Mountain Resort, Colombie-Britannique (BC)",
+  googlePhotosAlbumUrl: "https://photos.app.goo.gl/Kd56KBaJLfL7yuW8A",
   dates: "2 mars au 9 mars 2027",
   duration: "7 nuits / 8 jours",
   startDate: "2027-03-02T09:00:00",
