@@ -281,7 +281,7 @@ export default function HomeView({ setActiveTab }) {
               <ExternalLink size={15} />
             </a>
             <a 
-              href="https://www.panoramaresort.com/trail-map/" 
+              href="https://issuu.com/panoramamountainvillage/docs/panorama_w2024-25_trail_map?fr=xIAEoAT3_MzMz" 
               target="_blank" 
               rel="noreferrer"
               className="btn-secondary"
@@ -290,12 +290,12 @@ export default function HomeView({ setActiveTab }) {
               <ExternalLink size={15} />
             </a>
             <a 
-              href={TRIP_METADATA.lodging.hostawayPortal} 
+              href="https://www.panoramaresort.com/assets/Maps/2025_Maps_VilliageMap_Winter_Horizontal_WEB.jpg" 
               target="_blank" 
               rel="noreferrer"
               className="btn-secondary"
             >
-              <span>Portail Hébergement Aisling Baile</span>
+              <span>Carte du village</span>
               <ExternalLink size={15} />
             </a>
           </div>

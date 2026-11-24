@@ -546,12 +546,12 @@ export default function BudgetView() {
 
           <div className="lodging-buttons">
             <a 
-              href="https://guest-portal.hostaway.com/71859146/buixnwc-" 
+              href="https://www.aislingbaile.com/" 
               target="_blank" 
               rel="noreferrer"
               className="btn-primary btn-sm"
             >
-              <span>Portail Invité Hostaway</span>
+              <span>Site Web Aisling Baile</span>
               <ExternalLink size={14} />
             </a>
             <a 

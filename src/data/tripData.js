@@ -20,7 +20,6 @@ export const TRIP_METADATA = {
     name: "Aisling Baile - Condo 130",
     address: "2035 Panorama Drive #130, Panorama, BC V0A 1T0",
     reservationId: "71859146",
-    hostawayPortal: "https://guest-portal.hostaway.com/71859146/buixnwc-",
     website: "https://www.aislingbaile.com/",
     mapsUrl: "https://www.google.com/maps/search/?api=1&query=2035+Panorama+Drive+Panorama+BC+Canada"
   },
@@ -74,7 +73,6 @@ export const INITIAL_BUDGET_ITEMS = [
     address: "2035 Panorama Drive 130",
     links: [
       { label: "Site Aisling Baile", url: "https://www.aislingbaile.com/" },
-      { label: "Portail Invité Hostaway", url: "https://guest-portal.hostaway.com/71859146/buixnwc-" },
       { label: "Google Maps", url: "https://www.google.com/maps/search/?api=1&query=2035+Panorama+Drive+Panorama+BC+Canada" }
     ]
   },

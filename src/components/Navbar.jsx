@@ -1,18 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Mountain, LayoutDashboard, Gift, Scale, Camera, Clock, Database } from 'lucide-react';
+import { Mountain, LayoutDashboard, Gift, Scale, Camera, Clock } from 'lucide-react';
 import { TRIP_METADATA } from '../data/tripData';
-import { getDbStatus, subscribeDbStatus } from '../services/db';
-import DbSyncModal from './DbSyncModal';
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
-  const [dbStatus, setDbStatus] = useState(getDbStatus());
-  const [showDbModal, setShowDbModal] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = subscribeDbStatus((st) => setDbStatus(st));
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     const calculateTime = () => {
@@ -50,6 +41,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
           </button>
 
           {/* Desktop Navigation Tabs (Hidden on mobile) */}
+          {/* Order: Accueil -> Sommaire -> Photos -> Splitwise -> Surprise Noël 🎁 */}
           <nav className="nav-tabs desktop-only-nav">
             <button
               className={`nav-tab-btn ${activeTab === 'home' ? 'active' : ''}`}
@@ -68,11 +60,11 @@ export default function Navbar({ activeTab, setActiveTab }) {
             </button>
 
             <button
-              className={`nav-tab-btn surprise-btn ${activeTab === 'surprise' ? 'active' : ''}`}
-              onClick={() => setActiveTab('surprise')}
+              className={`nav-tab-btn ${activeTab === 'photos' ? 'active' : ''}`}
+              onClick={() => setActiveTab('photos')}
             >
-              <Gift size={17} className={activeTab === 'surprise' ? '' : 'surprise-sparkle'} />
-              <span>Surprise Noël 🎁</span>
+              <Camera size={17} />
+              <span>Photos</span>
             </button>
 
             <button
@@ -84,28 +76,18 @@ export default function Navbar({ activeTab, setActiveTab }) {
             </button>
 
             <button
-              className={`nav-tab-btn ${activeTab === 'photos' ? 'active' : ''}`}
-              onClick={() => setActiveTab('photos')}
+              className={`nav-tab-btn surprise-btn ${activeTab === 'surprise' ? 'active' : ''}`}
+              onClick={() => setActiveTab('surprise')}
             >
-              <Camera size={17} />
-              <span>Photos</span>
+              <Gift size={17} className={activeTab === 'surprise' ? '' : 'surprise-sparkle'} />
+              <span>Surprise Noël 🎁</span>
             </button>
           </nav>
 
-          {/* Header Right Items: DB sync pill & Countdown */}
+          {/* Header Right Items: Countdown */}
           <div className="header-right-group">
-            <button 
-              className={`header-db-pill ${dbStatus.connected ? 'connected' : 'local'}`}
-              onClick={() => setShowDbModal(true)}
-              title={dbStatus.connected ? "Base de données connectée (Modifications partagées en direct)" : "Mode local (Cliquer pour connecter la BD)"}
-            >
-              <span className={`db-indicator-dot ${dbStatus.connected ? 'dot-green' : 'dot-amber'}`}></span>
-              <Database size={13} />
-              <span className="db-pill-label">{dbStatus.connected ? 'BD en direct' : 'BD locale'}</span>
-            </button>
-
             <div className="header-countdown" title="Départ le 2 mars 2027">
-              <Clock size={13} />
+              <Clock size={14} />
               <span>J - {timeLeft.days}</span>
             </div>
           </div>
@@ -113,6 +95,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
       </header>
 
       {/* Mobile Bottom Navigation Bar (iOS / iPhone Style) */}
+      {/* Order: Accueil -> Sommaire -> Photos -> Splitwise -> Surprise 🎁 */}
       <nav className="mobile-bottom-nav">
         <div className="mobile-nav-inner">
           <button
@@ -138,16 +121,14 @@ export default function Navbar({ activeTab, setActiveTab }) {
           </button>
 
           <button
-            className={`mobile-nav-item surprise-item ${activeTab === 'surprise' ? 'active' : ''}`}
+            className={`mobile-nav-item ${activeTab === 'photos' ? 'active' : ''}`}
             onClick={() => {
-              setActiveTab('surprise');
+              setActiveTab('photos');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
-            <div className="mobile-surprise-circle">
-              <Gift size={20} />
-            </div>
-            <span>Surprise 🎁</span>
+            <Camera size={20} />
+            <span>Photos</span>
           </button>
 
           <button
@@ -162,20 +143,19 @@ export default function Navbar({ activeTab, setActiveTab }) {
           </button>
 
           <button
-            className={`mobile-nav-item ${activeTab === 'photos' ? 'active' : ''}`}
+            className={`mobile-nav-item surprise-item ${activeTab === 'surprise' ? 'active' : ''}`}
             onClick={() => {
-              setActiveTab('photos');
+              setActiveTab('surprise');
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
-            <Camera size={20} />
-            <span>Photos</span>
+            <div className="mobile-surprise-circle">
+              <Gift size={20} />
+            </div>
+            <span>Surprise 🎁</span>
           </button>
         </div>
       </nav>
-
-      {/* Database Connection / Sync Modal */}
-      <DbSyncModal isOpen={showDbModal} onClose={() => setShowDbModal(false)} />
     </>
   );
 }
