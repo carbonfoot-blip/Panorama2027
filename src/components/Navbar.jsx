@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Mountain, LayoutDashboard, Gift, Scale, Camera, Clock } from 'lucide-react';
+import { Mountain, LayoutDashboard, Gift, Scale, Camera, Clock, Database } from 'lucide-react';
 import { TRIP_METADATA } from '../data/tripData';
+import { getDbStatus, subscribeDbStatus } from '../services/db';
+import DbSyncModal from './DbSyncModal';
 
 export default function Navbar({ activeTab, setActiveTab }) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 });
+  const [dbStatus, setDbStatus] = useState(getDbStatus());
+  const [showDbModal, setShowDbModal] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribeDbStatus((st) => setDbStatus(st));
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const calculateTime = () => {
@@ -55,7 +64,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
               onClick={() => setActiveTab('budget')}
             >
               <LayoutDashboard size={17} />
-              <span>Sommaire & Réservations</span>
+              <span>Sommaire &amp; Réservations</span>
             </button>
 
             <button
@@ -83,10 +92,22 @@ export default function Navbar({ activeTab, setActiveTab }) {
             </button>
           </nav>
 
-          {/* Header Countdown Pill */}
-          <div className="header-countdown" title="Départ le 2 mars 2027">
-            <Clock size={14} />
-            <span>J - {timeLeft.days}</span>
+          {/* Header Right Items: DB sync pill & Countdown */}
+          <div className="header-right-group">
+            <button 
+              className={`header-db-pill ${dbStatus.connected ? 'connected' : 'local'}`}
+              onClick={() => setShowDbModal(true)}
+              title={dbStatus.connected ? "Base de données connectée (Modifications partagées en direct)" : "Mode local (Cliquer pour connecter la BD)"}
+            >
+              <span className={`db-indicator-dot ${dbStatus.connected ? 'dot-green' : 'dot-amber'}`}></span>
+              <Database size={13} />
+              <span className="db-pill-label">{dbStatus.connected ? 'BD en direct' : 'BD locale'}</span>
+            </button>
+
+            <div className="header-countdown" title="Départ le 2 mars 2027">
+              <Clock size={13} />
+              <span>J - {timeLeft.days}</span>
+            </div>
           </div>
         </div>
       </header>
@@ -152,6 +173,9 @@ export default function Navbar({ activeTab, setActiveTab }) {
           </button>
         </div>
       </nav>
+
+      {/* Database Connection / Sync Modal */}
+      <DbSyncModal isOpen={showDbModal} onClose={() => setShowDbModal(false)} />
     </>
   );
 }

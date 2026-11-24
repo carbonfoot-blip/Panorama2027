@@ -1,20 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Camera, Upload, Plus, Film, Image as ImageIcon, 
   ExternalLink, Trash2, X, Sparkles, Check, Clapperboard, Music, Eye
 } from 'lucide-react';
 import { INITIAL_PHOTOS } from '../data/tripData';
-
-const LOCAL_STORAGE_KEY_PHOTOS = 'panorama2027_trip_photos_v1';
+import { useSyncedData } from '../services/db';
 
 export default function PhotosView() {
-  const [photos, setPhotos] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY_PHOTOS);
-      if (saved) return JSON.parse(saved);
-    } catch (_e) {}
-    return INITIAL_PHOTOS;
-  });
+  const [photos, setPhotos, isLive] = useSyncedData('photos', INITIAL_PHOTOS);
 
   const [filter, setFilter] = useState('ALL');
   const [lightboxPhoto, setLightboxPhoto] = useState(null);
@@ -27,12 +20,6 @@ export default function PhotosView() {
   const [newAuthor, setNewAuthor] = useState('Famille');
   const [imageUrl, setImageUrl] = useState('');
   const [imageFilePreview, setImageFilePreview] = useState(null);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY_PHOTOS, JSON.stringify(photos));
-    } catch (_e) {}
-  }, [photos]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -93,9 +80,9 @@ export default function PhotosView() {
         <div>
           <div className="section-badge">
             <Camera size={14} />
-            <span>Galerie & Montage Souvenir</span>
+            <span>Galerie &amp; Montage Souvenir</span>
           </div>
-          <h1 className="section-title">Photos & Vidéos du Voyage</h1>
+          <h1 className="section-title">Photos &amp; Vidéos du Voyage</h1>
           <p className="section-desc">
             Consultez les clichés de la montagne, téléversez vos photos prises durant le séjour et préparez le montage vidéo souvenir pour la gang !
           </p>
@@ -167,7 +154,7 @@ export default function PhotosView() {
               <Clapperboard size={28} className="text-amber-400" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-white">Studio Montage Vidéo & Photos</h3>
+              <h3 className="text-2xl font-bold text-white">Studio Montage Vidéo &amp; Photos</h3>
               <p className="text-slate-400 text-sm">
                 Espace dédié à la préparation du montage souvenir d'après-voyage (shot list, musique, idées de scènes).
               </p>
@@ -214,7 +201,7 @@ export default function PhotosView() {
           <div className="montage-subcard">
             <h4 className="montage-subcard-title">
               <Music size={16} className="text-rose-400" />
-              <span>Idées de Trame Sonore & Style :</span>
+              <span>Idées de Trame Sonore &amp; Style :</span>
             </h4>
             <div className="montage-notes-box">
               <p className="text-sm text-slate-300 mb-2">
@@ -250,89 +237,98 @@ export default function PhotosView() {
       {/* Upload Photo Modal */}
       {showUploadModal && (
         <div className="modal-overlay" onClick={() => setShowUploadModal(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">Ajouter une photo à la galerie</h2>
+          <div className="modal-box glass-card" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-700">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Upload size={20} className="text-sky-400" />
+                <span>Ajouter une photo souvenir</span>
+              </h3>
               <button className="btn-action-icon" onClick={() => setShowUploadModal(false)}>
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleAddPhotoSubmit} className="modal-form">
+            <form onSubmit={handleAddPhotoSubmit} className="space-y-4">
               <div className="form-group">
-                <label>Fichier photo depuis votre appareil (téléphone ou ordi)</label>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleFileUpload}
-                  className="file-input-custom"
-                />
-              </div>
-
-              {imageFilePreview && (
-                <div className="preview-box mb-3">
-                  <img src={imageFilePreview} alt="Aperçu" className="preview-thumbnail" />
-                </div>
-              )}
-
-              <div className="form-group">
-                <label>Ou Lien URL d'une photo web</label>
-                <input 
-                  type="url" 
-                  placeholder="https://images.unsplash.com/..."
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Titre de la photo</label>
+                <label>Titre de la photo *</label>
                 <input 
                   type="text" 
-                  placeholder="Ex: Première trace au Taynton Bowl"
+                  required
+                  placeholder="Ex: Première descente du Summit Quad"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                 />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Catégorie</label>
-                  <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)}>
-                    <option value="Montagne">Montagne</option>
-                    <option value="Ski">Ski & Poudreuse</option>
-                    <option value="Village">Village</option>
-                    <option value="Chalet & Détente">Chalet & Bains</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Prise par</label>
-                  <input 
-                    type="text" 
-                    placeholder="Ex: Félix, Claude, Sylvie..."
-                    value={newAuthor}
-                    onChange={(e) => setNewAuthor(e.target.value)}
-                  />
-                </div>
               </div>
 
               <div className="form-group">
                 <label>Description / Légende</label>
                 <input 
                   type="text" 
-                  placeholder="Ex: Vue incroyable après 20 min de montée"
+                  placeholder="Ex: Les gars tout sourire avec leurs nouveaux skis !"
                   value={newCaption}
                   onChange={(e) => setNewCaption(e.target.value)}
                 />
               </div>
 
-              <div className="modal-actions">
+              <div className="form-grid grid grid-cols-2 gap-3">
+                <div className="form-group">
+                  <label>Catégorie</label>
+                  <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)}>
+                    <option value="Montagne">🏔️ Montagne</option>
+                    <option value="Ski">🎿 Ski &amp; Poudreuse</option>
+                    <option value="Village">🏘️ Village</option>
+                    <option value="Chalet &amp; Détente">🔥 Chalet &amp; Détente</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Auteur / Pris par</label>
+                  <select value={newAuthor} onChange={(e) => setNewAuthor(e.target.value)}>
+                    <option value="Famille">Famille</option>
+                    <option value="Les Legaults">Les Legaults</option>
+                    <option value="Les Synettes">Les Synettes</option>
+                    <option value="Panorama Resort">Panorama Resort</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Upload file or URL */}
+              <div className="form-group">
+                <label>Choisir un fichier image depuis votre appareil :</label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="file-upload-input"
+                />
+              </div>
+
+              <div className="text-center text-xs text-slate-400 uppercase tracking-widest my-1">
+                — OU PAR LIEN WEB —
+              </div>
+
+              <div className="form-group">
+                <label>Lien direct vers l'image (URL) :</label>
+                <input 
+                  type="url" 
+                  placeholder="https://..."
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                />
+              </div>
+
+              {imageFilePreview && (
+                <div className="image-preview-box mt-2">
+                  <img src={imageFilePreview} alt="Aperçu" className="w-full h-44 object-cover rounded-xl" />
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-700">
                 <button type="button" className="btn-secondary" onClick={() => setShowUploadModal(false)}>
                   Annuler
                 </button>
                 <button type="submit" className="btn-primary">
-                  Ajouter à la galerie
+                  Publier la photo
                 </button>
               </div>
             </form>

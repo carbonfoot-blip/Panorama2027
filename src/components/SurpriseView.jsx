@@ -5,19 +5,15 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CHRISTMAS_SURPRISE_DATA } from '../data/tripData';
-
-const LOCAL_STORAGE_KEY_SURPRISE_MSG = 'panorama2027_surprise_letter';
+import { useSyncedData } from '../services/db';
 
 export default function SurpriseView() {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isEditingMessage, setIsEditingMessage] = useState(false);
-  const [letterText, setLetterText] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY_SURPRISE_MSG);
-      if (saved) return saved;
-    } catch (_e) {}
-    return CHRISTMAS_SURPRISE_DATA.defaultLetter;
+  const [surpriseData, setSurpriseData] = useSyncedData('surprise', { 
+    letter: CHRISTMAS_SURPRISE_DATA.defaultLetter 
   });
+  const [localLetter, setLocalLetter] = useState(surpriseData?.letter || CHRISTMAS_SURPRISE_DATA.defaultLetter);
 
   const triggerReveal = () => {
     setIsRevealed(true);
@@ -64,9 +60,7 @@ export default function SurpriseView() {
 
   const handleSaveMessage = () => {
     setIsEditingMessage(false);
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY_SURPRISE_MSG, letterText);
-    } catch (_e) {}
+    setSurpriseData({ ...surpriseData, letter: localLetter });
   };
 
   return (
@@ -98,196 +92,217 @@ export default function SurpriseView() {
             <div className="gift-box-interactive" onClick={triggerReveal} title="Cliquez pour déballer !">
               <div className="gift-icon-container">
                 <Gift size={96} className="gift-icon-svg" />
-                <div className="gift-ribbon-shine"></div>
-              </div>
-              <div className="gift-tag-label">
-                <span>À : Les Garçons ⛷️</span>
               </div>
             </div>
 
-            <button className="btn-unveil-gift" onClick={triggerReveal}>
-              <Sparkles size={20} />
-              <span>OUVRIR LE CADEAU DE NOËL !</span>
-            </button>
-            <p className="text-xs text-slate-400 mt-3">
-              Astuce : Cliquez sur le bouton ou sur la boîte pour lancer les confettis et dévoiler la surprise !
-            </p>
+            <div>
+              <button className="btn-unveil-gift" onClick={triggerReveal}>
+                <Sparkles size={20} />
+                <span>Ouvrir la surprise de Noël !</span>
+              </button>
+            </div>
           </div>
         </div>
       ) : (
-        /* Revealed Stage: The Epic VIP Golden Ski Boarding Pass & Video Teaser */
-        <div className="revealed-container">
-          <div className="reveal-top-bar">
-            <div className="reveal-tag">
+        /* Revealed: The Big Experience Montage & VIP Golden Ticket */
+        <div className="surprise-revealed-container animate-fade-in">
+          {/* Header Celebration */}
+          <div className="celebration-header text-center mb-8">
+            <div className="holiday-badge mb-2">
               <Sparkles size={16} className="text-amber-400" />
-              <span>CADEAU OFFICIEL NOËL 2026</span>
+              <span>DESTINATION DÉVOILÉE</span>
             </div>
-
-            <button 
-              className="btn-secondary btn-sm"
-              onClick={() => setIsRevealed(false)}
-              title="Re-fermer la boîte pour répéter la surprise plus tard"
-            >
-              <RotateCcw size={15} />
-              <span>Re-fermer le cadeau</span>
-            </button>
+            <h1 className="celebration-title">
+              {CHRISTMAS_SURPRISE_DATA.revealTitle}
+            </h1>
+            <p className="celebration-subtitle">
+              Cet hiver, on part tous ensemble skier au <strong>{CHRISTMAS_SURPRISE_DATA.secretDestination}</strong> !
+            </p>
           </div>
 
-          <h1 className="celebration-title">
-            {CHRISTMAS_SURPRISE_DATA.revealTitle}
-          </h1>
-
-          {/* Golden VIP Boarding Pass Card */}
-          <div className="vip-boarding-pass">
+          {/* VIP Golden Boarding Pass */}
+          <div className="vip-boarding-pass mb-8">
             <div className="pass-left-main">
               <div className="pass-header">
                 <div className="pass-brand">
                   <Mountain size={28} className="text-amber-400" />
                   <div>
-                    <span className="pass-brand-name">PANORAMA SKI EXPEDITION</span>
-                    <span className="pass-brand-sub">BILLET VIP OR • ROCHEUSES CANADIENNES</span>
+                    <span className="pass-brand-name">PANORAMA MOUNTAIN AIRWAYS</span>
+                    <span className="pass-brand-sub">BILLET VIP ÉDITION NOËL</span>
                   </div>
                 </div>
-                <div className="pass-category-chip">ALL-INCLUSIVE</div>
+                <div className="pass-badge">CLASSE EXPÉDITION ROCHEUSES</div>
               </div>
 
               <div className="pass-flight-row">
-                <div className="flight-endpoint">
+                <div className="flight-col">
                   <span className="airport-code">YUL</span>
-                  <span className="airport-city">Montréal</span>
+                  <span className="airport-city">Montréal, QC</span>
                 </div>
 
                 <div className="flight-path">
-                  <Plane size={24} className="flight-plane-icon" />
                   <div className="flight-line"></div>
-                  <span className="flight-duration">Mars 2027</span>
+                  <Plane size={24} className="text-amber-400 my-1 transform rotate-90" />
+                  <span className="flight-duration">~4h30 de vol</span>
                 </div>
 
-                <div className="flight-endpoint">
-                  <span className="airport-code text-amber-400">PANORAMA</span>
-                  <span className="airport-city">Colombie-Britannique</span>
+                <div className="flight-col">
+                  <span className="airport-code">YYC</span>
+                  <span className="airport-city">Calgary, AB</span>
                 </div>
               </div>
 
               <div className="pass-meta-grid">
-                <div className="pass-meta-item">
+                <div>
                   <span className="meta-lbl">PASSAGERS</span>
                   <span className="meta-val">{CHRISTMAS_SURPRISE_DATA.passengers}</span>
                 </div>
-
-                <div className="pass-meta-item">
-                  <span className="meta-lbl">DATES DU SÉJOUR</span>
-                  <span className="meta-val">2 au 9 Mars 2027 (7 nuits)</span>
+                <div>
+                  <span className="meta-lbl">DATES DU VOYAGE</span>
+                  <span className="meta-val text-amber-300 font-bold">{CHRISTMAS_SURPRISE_DATA.datesText}</span>
                 </div>
-
-                <div className="pass-meta-item">
+                <div>
                   <span className="meta-lbl">HÉBERGEMENT</span>
-                  <span className="meta-val">Condo Aisling Baile #130 (Ski-in / Ski-out)</span>
+                  <span className="meta-val">Aisling Baile • Ski-in / Ski-out</span>
                 </div>
-
-                <div className="pass-meta-item">
-                  <span className="meta-lbl">FORFAIT SKI</span>
-                  <span className="meta-val text-amber-400">5 Jours de Ski Illimité</span>
+                <div>
+                  <span className="meta-lbl">TRANSPORT SUR PLACE</span>
+                  <span className="meta-val">2x VUS Rav4 4x4 Hertz</span>
                 </div>
               </div>
 
-              {/* Highlights Chips */}
               <div className="pass-features-list">
-                {CHRISTMAS_SURPRISE_DATA.highlights.map((h, i) => (
-                  <div key={i} className="pass-feature-pill">
-                    <CheckCircle2 size={14} className="text-emerald-400" />
-                    <span>{h}</span>
-                  </div>
-                ))}
+                <div className="pass-feature-pill">
+                  <CheckCircle2 size={14} className="text-emerald-400" />
+                  <span>5 Jours de ski de calibre mondial</span>
+                </div>
+                <div className="pass-feature-pill">
+                  <CheckCircle2 size={14} className="text-emerald-400" />
+                  <span>1,300 mètres de dénivelé vertical</span>
+                </div>
+                <div className="pass-feature-pill">
+                  <CheckCircle2 size={14} className="text-emerald-400" />
+                  <span>Piscines thermales chaudes extérieures</span>
+                </div>
               </div>
             </div>
 
-            {/* Stub on Right */}
             <div className="pass-right-stub">
               <div className="stub-notch top"></div>
               <div className="stub-notch bottom"></div>
               <div className="stub-content">
-                <span className="stub-rotated-text">BOARDING PASS • SKI 2027</span>
-                <div className="stub-barcode">
-                  <div className="barcode-lines"></div>
-                  <span className="barcode-number"># PANO-2027-BOYS</span>
-                </div>
-                <div className="stub-seal">
-                  <Snowflake size={32} className="text-amber-400" />
+                <div className="text-xs uppercase tracking-widest text-slate-400 font-bold mb-2">SIÈGE</div>
+                <div className="text-3xl font-black text-amber-400 font-display">01A</div>
+                <div className="text-xs text-slate-400 mt-2 font-mono">PAN-2027-NOEL</div>
+                <div className="mt-4 text-center">
+                  <span className="inline-block px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs font-bold border border-amber-500/40">
+                    CONFIRMÉ
+                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Video / Visual Teaser Showcase */}
-          <div className="glass-card video-teaser-card mt-6">
+          {/* YouTube Video Teaser / Atmosphere */}
+          <div className="glass-card video-teaser-card mb-8">
             <div className="video-card-header">
-              <div>
-                <div className="section-badge">
-                  <Play size={13} />
-                  <span>Teaser de la Montagne</span>
-                </div>
-                <h3 className="text-2xl font-bold text-white">Ce qui vous attend à Panorama BC</h3>
+              <div className="flex items-center gap-2">
+                <Play size={20} className="text-rose-500 fill-rose-500" />
+                <h3 className="text-xl font-bold text-white">Aperçu vidéo officiel de la montagne</h3>
               </div>
-              <a 
-                href="https://www.youtube.com/results?search_query=panorama+mountain+resort+skiing" 
-                target="_blank" 
-                rel="noreferrer"
-                className="btn-secondary btn-sm"
-              >
-                Voir plus de vidéos
-              </a>
+              <span className="text-xs text-slate-400">Pour donner le goût à toute la famille</span>
             </div>
 
             <div className="video-container-wrapper">
               <iframe
-                title="Panorama Mountain Resort Skiing Teaser"
-                src="https://www.youtube-nocookie.com/embed/fD307j55ZkQ?autoplay=0&controls=1&rel=0"
+                className="teaser-iframe"
+                src="https://www.youtube-nocookie.com/embed/bX_jQ423d6g?autoplay=0&rel=0"
+                title="Panorama Mountain Resort Official"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                className="teaser-iframe"
               ></iframe>
             </div>
           </div>
 
-          {/* Letter / Personal Parent Message */}
-          <div className="glass-card secret-letter-card mt-6">
+          {/* Secret Christmas Message / Letter from Parents */}
+          <div className="glass-card secret-letter-card mb-8">
             <div className="letter-header">
               <div className="flex items-center gap-2">
-                <Flame size={20} className="text-amber-400" />
-                <h3 className="text-xl font-bold text-white">Le mot des parents sous le sapin</h3>
+                <Sparkles size={18} className="text-amber-400" />
+                <h3 className="text-lg font-bold text-white">Le Message du Père Noël aux Garçons</h3>
               </div>
-
-              {!isEditingMessage ? (
-                <button className="btn-secondary btn-sm" onClick={() => setIsEditingMessage(true)}>
-                  <Edit3 size={15} />
-                  <span>Personnaliser le texte</span>
-                </button>
-              ) : (
-                <button className="btn-primary btn-sm" onClick={handleSaveMessage}>
-                  <Save size={15} />
-                  <span>Sauvegarder</span>
-                </button>
-              )}
+              <button 
+                className="btn-secondary btn-sm"
+                onClick={() => {
+                  if (isEditingMessage) {
+                    handleSaveMessage();
+                  } else {
+                    setLocalLetter(surpriseData?.letter || CHRISTMAS_SURPRISE_DATA.defaultLetter);
+                    setIsEditingMessage(true);
+                  }
+                }}
+              >
+                {isEditingMessage ? (
+                  <>
+                    <Save size={14} className="text-emerald-400" />
+                    <span>Sauvegarder</span>
+                  </>
+                ) : (
+                  <>
+                    <Edit3 size={14} />
+                    <span>Modifier le message</span>
+                  </>
+                )}
+              </button>
             </div>
 
-            {!isEditingMessage ? (
-              <div className="letter-body">
-                {letterText.split('\n\n').map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
-              </div>
-            ) : (
-              <div className="letter-edit-box">
-                <textarea
-                  rows="6"
-                  className="letter-textarea"
-                  value={letterText}
-                  onChange={(e) => setLetterText(e.target.value)}
-                  placeholder="Écrivez votre message personnalisé pour les garçons..."
-                />
-              </div>
-            )}
+            <div className="letter-body">
+              {isEditingMessage ? (
+                <div className="letter-edit-box">
+                  <textarea 
+                    rows={8}
+                    className="w-full bg-slate-900/80 border border-slate-700 rounded-xl p-4 text-white text-sm font-sans leading-relaxed focus:outline-none focus:border-amber-400"
+                    value={localLetter}
+                    onChange={(e) => setLocalLetter(e.target.value)}
+                  />
+                  <div className="flex justify-end gap-2 mt-2">
+                    <button 
+                      className="btn-secondary btn-sm" 
+                      onClick={() => setIsEditingMessage(false)}
+                    >
+                      Annuler
+                    </button>
+                    <button 
+                      className="btn-primary btn-sm" 
+                      onClick={handleSaveMessage}
+                    >
+                      Sauvegarder
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="letter-display-box">
+                  {(surpriseData?.letter || CHRISTMAS_SURPRISE_DATA.defaultLetter)
+                    .split('\n\n')
+                    .map((paragraph, idx) => (
+                      <p key={idx} className="text-slate-200 leading-relaxed text-base mb-3">
+                        {paragraph}
+                      </p>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action to re-wrap */}
+          <div className="text-center pt-4">
+            <button 
+              className="btn-secondary btn-sm inline-flex items-center gap-1.5 opacity-60 hover:opacity-100"
+              onClick={() => setIsRevealed(false)}
+            >
+              <RotateCcw size={14} />
+              <span>Ré-emballer le cadeau (pour le re-montrer le matin de Noël !)</span>
+            </button>
           </div>
         </div>
       )}

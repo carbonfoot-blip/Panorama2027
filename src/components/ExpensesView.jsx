@@ -1,21 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
-  Scale, Plus, Trash2, ArrowRight, DollarSign, 
+  Scale, Plus, Trash2, DollarSign, 
   Receipt, ShoppingBag, Fuel, Utensils, Snowflake, Home, 
-  Calendar, Check, AlertCircle, RefreshCw, X
+  Calendar, Check, AlertCircle, RefreshCw, X, Tag
 } from 'lucide-react';
 import { INITIAL_EXPENSES } from '../data/tripData';
-
-const LOCAL_STORAGE_KEY_EXPENSES = 'panorama2027_trip_expenses_v1';
+import { useSyncedData } from '../services/db';
 
 export default function ExpensesView() {
-  const [expenses, setExpenses] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY_EXPENSES);
-      if (saved) return JSON.parse(saved);
-    } catch (_e) {}
-    return INITIAL_EXPENSES;
-  });
+  const [expenses, setExpenses, isLive] = useSyncedData('expenses', INITIAL_EXPENSES);
 
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -30,12 +23,6 @@ export default function ExpensesView() {
   const [category, setCategory] = useState('Épicerie');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState('');
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY_EXPENSES, JSON.stringify(expenses));
-    } catch (_e) {}
-  }, [expenses]);
 
   // Calculations
   let totalSpent = 0;
@@ -59,7 +46,6 @@ export default function ExpensesView() {
   });
 
   // Net Balance:
-  // If Legaults paid more than their share: Synettes owe Legaults
   // Net owed by Synettes to Legaults = totalPaidLegaults - totalShareLegaults
   const netBalance = totalPaidLegaults - totalShareLegaults;
 
@@ -125,7 +111,7 @@ export default function ExpensesView() {
     if (window.confirm(`Confirmer le règlement de ${formatCurrency(settleAmount)} payé par les ${debtor} aux ${creditor} ?`)) {
       const settlementExpense = {
         id: `settle-${Date.now()}`,
-        title: `🤝 Règlement de compte (${debtor} -> ${creditor})`,
+        title: `🤝 Règlement (${debtor} -> ${creditor})`,
         amount: settleAmount,
         paidBy: debtor,
         splitRule: debtor === 'Legaults' ? '100-synettes' : '100-legaults',
@@ -133,7 +119,7 @@ export default function ExpensesView() {
         synettesShare: debtor === 'Synettes' ? 0 : settleAmount,
         category: 'Règlement',
         date: new Date().toISOString().split('T')[0],
-        note: `Virement / remboursement complet de la dette pour équilibrer les comptes.`
+        note: `Remboursement pour équilibrer les comptes.`
       };
 
       setExpenses([settlementExpense, ...expenses]);
@@ -151,52 +137,53 @@ export default function ExpensesView() {
 
   const getCategoryIcon = (cat) => {
     switch (cat) {
-      case 'Épicerie': return <ShoppingBag size={16} className="text-emerald-400" />;
-      case 'Essence & Transport': return <Fuel size={16} className="text-amber-400" />;
-      case 'Restaurant & Bar': return <Utensils size={16} className="text-rose-400" />;
-      case 'Activités & Ski': return <Snowflake size={16} className="text-sky-400" />;
-      case 'Hébergement': return <Home size={16} className="text-indigo-400" />;
-      default: return <Receipt size={16} className="text-slate-400" />;
+      case 'Épicerie': return <ShoppingBag size={14} className="text-amber-400" />;
+      case 'Essence & Transport': return <Fuel size={14} className="text-sky-400" />;
+      case 'Restaurant & Bar': return <Utensils size={14} className="text-rose-400" />;
+      case 'Activités & Ski': return <Snowflake size={14} className="text-cyan-400" />;
+      case 'Hébergement': return <Home size={14} className="text-purple-400" />;
+      default: return <Tag size={14} className="text-slate-400" />;
     }
   };
 
   return (
     <div className="expenses-view">
-      {/* Header */}
+      {/* View Header */}
       <div className="view-header-bar">
         <div>
           <div className="section-badge">
             <Scale size={14} />
-            <span>Splitwise Voyage en Direct</span>
+            <span>Gestion de Dépenses Familiales</span>
           </div>
-          <h1 className="section-title">Suivi des Dépenses Partagées</h1>
+          <h1 className="section-title">Splitwise du Voyage</h1>
           <p className="section-desc">
-            Enregistrez les dépenses quotidiennes sur place (épiceries, restos, essence) pour garder des comptes équilibrés entre les deux familles sans stress !
+            Ajoutez les factures d'épicerie, essence, restos et activités sur place. Le solde entre les Legaults et les Synettes est calculé automatiquement.
           </p>
         </div>
 
         <div className="header-actions-group">
-          <button className="btn-secondary" onClick={handleSettleUp} title="Équilibrer les comptes">
-            <RefreshCw size={16} />
-            <span>Régler la balance</span>
-          </button>
-          <button className="btn-primary" onClick={() => setShowAddForm(!showAddForm)}>
+          {Math.abs(netBalance) >= 0.01 && (
+            <button className="btn-secondary" onClick={handleSettleUp}>
+              <RefreshCw size={16} />
+              <span>Régler les comptes</span>
+            </button>
+          )}
+          <button className="btn-primary" onClick={() => setShowAddForm(true)}>
             <Plus size={18} />
             <span>Ajouter une dépense</span>
           </button>
         </div>
       </div>
 
-      {/* Splitwise Master Balance Widget */}
-      <div className="splitwise-banner-card glass-card">
+      {/* Splitwise Banner */}
+      <div className="glass-card splitwise-banner-card">
         <div className="splitwise-grid">
-          {/* Main Net Settlement Verdict */}
+          {/* Main Verdict Box */}
           <div className="splitwise-verdict-box">
-            <span className="verdict-tag">SOLDE NET EN TEMPS RÉEL</span>
-
-            {Math.abs(netBalance) < 0.05 ? (
+            <span className="verdict-tag">ÉTAT DES COMPTES ACTUEL</span>
+            {Math.abs(netBalance) < 0.01 ? (
               <div className="verdict-balanced">
-                <span className="verdict-emoji">🎉</span>
+                <div className="verdict-amount-row text-emerald-400">$0.00</div>
                 <div className="verdict-main-text text-emerald-400">
                   Tout le monde est quitte !
                 </div>
@@ -213,7 +200,7 @@ export default function ExpensesView() {
                   Les <strong className="text-emerald-300">Synettes</strong> doivent aux <strong className="text-sky-300">Legaults</strong>
                 </div>
                 <p className="verdict-sub-text">
-                  Les Legaults ont avancé plus de frais partagés durant le voyage.
+                  Les Legaults ont avancé plus de frais partagés durant le séjour.
                 </p>
               </div>
             ) : (
@@ -225,7 +212,7 @@ export default function ExpensesView() {
                   Les <strong className="text-sky-300">Legaults</strong> doivent aux <strong className="text-emerald-300">Synettes</strong>
                 </div>
                 <p className="verdict-sub-text">
-                  Les Synettes ont avancé plus de frais partagés durant le voyage.
+                  Les Synettes ont avancé plus de frais partagés durant le séjour.
                 </p>
               </div>
             )}
@@ -257,10 +244,10 @@ export default function ExpensesView() {
         </div>
       </div>
 
-      {/* Add Expense Form / Modal */}
+      {/* Add Expense Form */}
       {showAddForm && (
-        <div className="glass-card add-expense-form-card mt-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="glass-card add-expense-form-card mb-6">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-700">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
               <Plus size={20} className="text-sky-400" />
               <span>Nouvelle dépense sur place</span>
@@ -276,7 +263,7 @@ export default function ExpensesView() {
               <input 
                 type="text" 
                 required 
-                placeholder="Ex: Épicerie No Frills Invermere, Essence, Resto au village..."
+                placeholder="Ex: Épicerie No Frills, Plein d'essence, Resto au village..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
@@ -313,7 +300,7 @@ export default function ExpensesView() {
             <div className="form-group">
               <label>Comment partager cette facture ?</label>
               <select value={splitRule} onChange={(e) => setSplitRule(e.target.value)}>
-                <option value="50-50">50% / 50% Égal (recommandé pour épicerie & chalet)</option>
+                <option value="50-50">50% / 50% Égal (recommandé)</option>
                 <option value="100-legaults">100% à la charge des Legaults</option>
                 <option value="100-synettes">100% à la charge des Synettes</option>
                 <option value="custom">Montants personnalisés</option>
@@ -323,16 +310,15 @@ export default function ExpensesView() {
             <div className="form-group">
               <label>Catégorie</label>
               <select value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option value="Épicerie">🛒 Épicerie & Aliments</option>
-                <option value="Essence & Transport">⛽ Essence & Transport</option>
-                <option value="Restaurant & Bar">🍔 Restaurant & Après-Ski</option>
-                <option value="Activités & Ski">🎿 Activités & Ski</option>
-                <option value="Hébergement">🏠 Logement & Extra</option>
+                <option value="Épicerie">🛒 Épicerie &amp; Aliments</option>
+                <option value="Essence &amp; Transport">⛽ Essence &amp; Transport</option>
+                <option value="Restaurant &amp; Bar">🍔 Restaurant &amp; Après-Ski</option>
+                <option value="Activités &amp; Ski">🎿 Activités &amp; Ski</option>
+                <option value="Hébergement">🏠 Logement &amp; Extra</option>
                 <option value="Autre">🧾 Autre</option>
               </select>
             </div>
 
-            {/* If Custom Split is Selected */}
             {splitRule === 'custom' && (
               <div className="form-row col-span-2 bg-slate-900/60 p-3 rounded-xl border border-slate-700">
                 <div className="form-group">
@@ -365,13 +351,13 @@ export default function ExpensesView() {
               <label>Note additionnelle (optionnel)</label>
               <input 
                 type="text" 
-                placeholder="Ex: Facture gardée dans le portefeuille..."
+                placeholder="Ex: Facture gardée dans le condo..."
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />
             </div>
 
-            <div className="form-actions col-span-2 flex justify-end gap-3 mt-2">
+            <div className="form-actions col-span-2 flex justify-end gap-3 mt-2 pt-2 border-t border-slate-700">
               <button type="button" className="btn-secondary" onClick={() => setShowAddForm(false)}>
                 Annuler
               </button>
@@ -383,8 +369,8 @@ export default function ExpensesView() {
         </div>
       )}
 
-      {/* Expenses History List */}
-      <div className="glass-card expenses-list-card mt-6">
+      {/* Expenses History */}
+      <div className="glass-card expenses-list-card">
         <div className="list-top-bar">
           <div className="flex items-center gap-2">
             <Receipt size={20} className="text-sky-400" />
@@ -405,84 +391,133 @@ export default function ExpensesView() {
         </div>
 
         {filteredExpenses.length === 0 ? (
-          <div className="empty-expenses-state">
-            <Receipt size={40} className="text-slate-600 mb-2" />
+          <div className="empty-expenses-state p-8 text-center">
+            <Receipt size={40} className="text-slate-600 mx-auto mb-2" />
             <p className="text-slate-400">Aucune dépense enregistrée dans cette catégorie.</p>
           </div>
         ) : (
-          <div className="expenses-table-wrapper">
-            <table className="expenses-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Dépense</th>
-                  <th>Catégorie</th>
-                  <th>Montant</th>
-                  <th>Payé par</th>
-                  <th>Partage</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredExpenses.map((exp) => (
-                  <tr key={exp.id} className="expense-row">
-                    <td className="text-slate-400 whitespace-nowrap text-sm">
-                      {exp.date}
-                    </td>
-
-                    <td>
-                      <div className="font-semibold text-white">{exp.title}</div>
-                      {exp.note && <div className="text-xs text-slate-400">{exp.note}</div>}
-                    </td>
-
-                    <td>
-                      <div className="cat-badge">
-                        {getCategoryIcon(exp.category)}
-                        <span>{exp.category}</span>
-                      </div>
-                    </td>
-
-                    <td className="font-bold text-white text-base">
-                      {formatCurrency(exp.amount)}
-                    </td>
-
-                    <td>
-                      <span className={`family-tag ${exp.paidBy.toLowerCase()}`}>
-                        {exp.paidBy}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="text-xs text-slate-300">
-                        {exp.splitRule === '50-50' && (
-                          <span>50% ({formatCurrency(exp.legaultsShare)}) ch.</span>
-                        )}
-                        {exp.splitRule === '100-legaults' && (
-                          <span className="text-sky-300">100% Legaults</span>
-                        )}
-                        {exp.splitRule === '100-synettes' && (
-                          <span className="text-emerald-300">100% Synettes</span>
-                        )}
-                        {exp.splitRule === 'custom' && (
-                          <span>L: {formatCurrency(exp.legaultsShare)} | S: {formatCurrency(exp.synettesShare)}</span>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="text-right">
+          <>
+            {/* 1. MOBILE CARDS VIEW (Clean, touch-friendly, no squished columns) */}
+            <div className="expenses-mobile-cards-list">
+              {filteredExpenses.map((exp) => (
+                <div key={exp.id} className="expense-mobile-card">
+                  <div className="expense-card-top-row">
+                    <div className="cat-badge">
+                      {getCategoryIcon(exp.category)}
+                      <span>{exp.category}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400">{exp.date}</span>
                       <button
                         className="btn-action-icon hover:text-rose-400"
                         title="Supprimer la dépense"
                         onClick={() => handleDeleteExpense(exp.id)}
                       >
-                        <Trash2 size={15} />
+                        <Trash2 size={14} />
                       </button>
-                    </td>
+                    </div>
+                  </div>
+
+                  <div className="expense-card-main-info">
+                    <h4 className="expense-card-title">{exp.title}</h4>
+                    {exp.note && <p className="expense-card-note">{exp.note}</p>}
+                  </div>
+
+                  <div className="expense-card-bottom-row">
+                    <div className="expense-card-amount">
+                      {formatCurrency(exp.amount)}
+                    </div>
+                    <div className="expense-card-tags">
+                      <span className={`family-tag ${exp.paidBy.toLowerCase()}`}>
+                        Payé par {exp.paidBy}
+                      </span>
+                      <span className="expense-split-badge">
+                        {exp.splitRule === '50-50' && `50% (${formatCurrency(exp.legaultsShare)}) ch.`}
+                        {exp.splitRule === '100-legaults' && '100% Legaults'}
+                        {exp.splitRule === '100-synettes' && '100% Synettes'}
+                        {exp.splitRule === 'custom' && `L: ${formatCurrency(exp.legaultsShare)} | S: ${formatCurrency(exp.synettesShare)}`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 2. DESKTOP SPREADSHEET TABLE (Visible on tablets and desktops > 768px) */}
+            <div className="expenses-desktop-table expenses-table-wrapper">
+              <table className="expenses-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Dépense</th>
+                    <th>Catégorie</th>
+                    <th>Montant</th>
+                    <th>Payé par</th>
+                    <th>Partage</th>
+                    <th className="text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredExpenses.map((exp) => (
+                    <tr key={exp.id} className="expense-row">
+                      <td className="text-slate-400 whitespace-nowrap text-sm">
+                        {exp.date}
+                      </td>
+
+                      <td>
+                        <div className="font-semibold text-white">{exp.title}</div>
+                        {exp.note && <div className="text-xs text-slate-400">{exp.note}</div>}
+                      </td>
+
+                      <td>
+                        <div className="cat-badge">
+                          {getCategoryIcon(exp.category)}
+                          <span>{exp.category}</span>
+                        </div>
+                      </td>
+
+                      <td className="font-bold text-white text-base">
+                        {formatCurrency(exp.amount)}
+                      </td>
+
+                      <td>
+                        <span className={`family-tag ${exp.paidBy.toLowerCase()}`}>
+                          {exp.paidBy}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="text-xs text-slate-300">
+                          {exp.splitRule === '50-50' && (
+                            <span>50% ({formatCurrency(exp.legaultsShare)}) ch.</span>
+                          )}
+                          {exp.splitRule === '100-legaults' && (
+                            <span className="text-sky-300">100% Legaults</span>
+                          )}
+                          {exp.splitRule === '100-synettes' && (
+                            <span className="text-emerald-300">100% Synettes</span>
+                          )}
+                          {exp.splitRule === 'custom' && (
+                            <span>L: {formatCurrency(exp.legaultsShare)} | S: {formatCurrency(exp.synettesShare)}</span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="text-right">
+                        <button
+                          className="btn-action-icon hover:text-rose-400"
+                          title="Supprimer la dépense"
+                          onClick={() => handleDeleteExpense(exp.id)}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
