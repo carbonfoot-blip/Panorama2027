@@ -176,13 +176,13 @@ export default function BudgetView() {
           </div>
           <h1 className="section-title">Sommaire & Réservations</h1>
           <p className="section-desc">
-            Toutes les dépenses pré-voyage, billets de ski, hébergement et confirmations officielles pour les Legaults et les Synettes. Vous pouvez modifier ou ajouter des lignes à tout moment.
+            Toutes les dépenses pré-voyage, billets de ski, hébergement et confirmations officielles pour les Legaults et les Synettes.
           </p>
         </div>
 
         <div className="header-actions-group">
-          <button className="btn-secondary" onClick={resetToDefault} title="Rétablir données initiales">
-            Réinitialiser
+          <button className="btn-secondary btn-sm" onClick={resetToDefault} title="Rétablir données initiales">
+            Rétablir défaut
           </button>
           <button className="btn-primary" onClick={() => setShowAddModal(true)}>
             <Plus size={18} />
@@ -197,7 +197,7 @@ export default function BudgetView() {
           <div className="kpi-top">
             <span className="kpi-label">Budget Total Estimé</span>
             <div className="kpi-icon-badge blue">
-              <DollarSign size={20} />
+              <DollarSign size={18} />
             </div>
           </div>
           <div className="kpi-amount">{formatCurrency(totalAmount)}</div>
@@ -229,7 +229,7 @@ export default function BudgetView() {
           </div>
           <div className="kpi-amount text-sky-400">{formatCurrency(totalLegaults)}</div>
           <p className="kpi-note">
-            Vols, part du condo Aisling Baile, billets de ski adultes & enfants, location Rav4 #2.
+            Vols, 50% condo Aisling Baile, ski adultes & enfants, Rav4 #2.
           </p>
         </div>
 
@@ -245,52 +245,162 @@ export default function BudgetView() {
           </div>
           <div className="kpi-amount text-emerald-400">{formatCurrency(totalSynettes)}</div>
           <p className="kpi-note">
-            Vol, part du condo Aisling Baile, billets de ski seniors, location Rav4 #1.
+            Vol, 50% condo Aisling Baile, ski seniors, Rav4 #1.
           </p>
         </div>
       </div>
 
-      {/* Filter and Table Card */}
-      <div className="glass-card table-card-container">
-        {/* Filter Bar */}
-        <div className="table-controls-bar">
-          <div className="filter-group">
-            <Filter size={16} className="text-slate-400" />
-            <span className="filter-label">Filtrer par statut :</span>
-            <div className="filter-pills">
-              <button 
-                className={`filter-pill ${statusFilter === 'ALL' ? 'active' : ''}`}
-                onClick={() => setStatusFilter('ALL')}
+      {/* Filter Bar */}
+      <div className="table-controls-bar glass-card mb-4">
+        <div className="filter-group">
+          <Filter size={16} className="text-slate-400" />
+          <span className="filter-label">Filtre :</span>
+          <div className="filter-pills">
+            <button 
+              className={`filter-pill ${statusFilter === 'ALL' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('ALL')}
+            >
+              Tous ({items.length})
+            </button>
+            <button 
+              className={`filter-pill paye ${statusFilter === 'Payé' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('Payé')}
+            >
+              Payé ({items.filter(i => i.statut === 'Payé').length})
+            </button>
+            <button 
+              className={`filter-pill booke ${statusFilter === 'Booké, pas payé' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('Booké, pas payé')}
+            >
+              Booké ({items.filter(i => i.statut === 'Booké, pas payé').length})
+            </button>
+            <button 
+              className={`filter-pill acheter ${statusFilter === 'À acheter' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('À acheter')}
+            >
+              À acheter ({items.filter(i => i.statut === 'À acheter').length})
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ======================================================================= */}
+      {/* 1. MOBILE CARDS VIEW (Visible exclusively on iPhone / Mobile < 768px)    */}
+      {/* ======================================================================= */}
+      <div className="budget-mobile-cards-list">
+        {filteredItems.map((row) => (
+          <div key={row.id} className="budget-mobile-card glass-card">
+            {/* Top row: Item title & Statut dropdown */}
+            <div className="mobile-card-header">
+              <div className="mobile-item-title-col">
+                <h3 className="mobile-item-title">{row.item}</h3>
+                {row.vehicle && <span className="item-sub-tag">{row.vehicle}</span>}
+              </div>
+
+              <select
+                className={`status-select ${
+                  row.statut === 'Payé' ? 'paye' : row.statut === 'Booké, pas payé' ? 'booke' : 'acheter'
+                }`}
+                value={row.statut}
+                onChange={(e) => updateItemStatus(row.id, e.target.value)}
               >
-                Tous ({items.length})
+                <option value="Payé">Payé</option>
+                <option value="Booké, pas payé">Booké, pas payé</option>
+                <option value="À acheter">À acheter</option>
+              </select>
+            </div>
+
+            {/* Price & Family Share Grid */}
+            <div className="mobile-card-amounts-box">
+              <div className="mobile-total-price">
+                <span className="mobile-amt-lbl">Prix total :</span>
+                <span className="mobile-amt-val">{formatCurrency(row.prixTotal)}</span>
+              </div>
+
+              <div className="mobile-family-shares">
+                <div className="mobile-share-pill legaults">
+                  <span className="lbl">Legaults :</span>
+                  <span className="val">{row.legaults ? formatCurrency(row.legaults) : '0,00 $'}</span>
+                </div>
+                <div className="mobile-share-pill synettes">
+                  <span className="lbl">Synettes :</span>
+                  <span className="val">{row.synettes ? formatCurrency(row.synettes) : '0,00 $'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Note & Confirmation */}
+            {row.note && (
+              <div className="mobile-card-note">
+                {row.note}
+              </div>
+            )}
+
+            {/* Confirmation Quick Copy Button */}
+            {row.confirmation && (
+              <div className="mobile-copy-row">
+                <button 
+                  className="mobile-copy-chip"
+                  onClick={() => copyToClipboard(row.confirmation, row.id)}
+                >
+                  {copiedId === row.id ? (
+                    <>
+                      <Check size={14} className="text-emerald-400" />
+                      <span className="text-emerald-300 font-bold">Copié dans le presse-papier !</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} />
+                      <span>Copier confirmation : <strong>#{row.confirmation}</strong></span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Links if available */}
+            {row.links && row.links.length > 0 && (
+              <div className="mobile-links-row">
+                {row.links.map((link, idx) => (
+                  <a 
+                    key={idx}
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="note-link-pill"
+                  >
+                    <span>{link.label}</span>
+                    <ExternalLink size={12} />
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {/* Card Actions (Edit / Delete) */}
+            <div className="mobile-card-actions">
+              <button 
+                className="btn-secondary btn-sm flex-1 flex items-center justify-center gap-1.5"
+                onClick={() => handleStartEdit(row)}
+              >
+                <Edit2 size={14} />
+                <span>Modifier</span>
               </button>
               <button 
-                className={`filter-pill paye ${statusFilter === 'Payé' ? 'active' : ''}`}
-                onClick={() => setStatusFilter('Payé')}
+                className="btn-action-icon hover:text-rose-400"
+                onClick={() => handleDeleteItem(row.id)}
+                title="Supprimer"
               >
-                Payé ({items.filter(i => i.statut === 'Payé').length})
-              </button>
-              <button 
-                className={`filter-pill booke ${statusFilter === 'Booké, pas payé' ? 'active' : ''}`}
-                onClick={() => setStatusFilter('Booké, pas payé')}
-              >
-                Booké, pas payé ({items.filter(i => i.statut === 'Booké, pas payé').length})
-              </button>
-              <button 
-                className={`filter-pill acheter ${statusFilter === 'À acheter' ? 'active' : ''}`}
-                onClick={() => setStatusFilter('À acheter')}
-              >
-                À acheter ({items.filter(i => i.statut === 'À acheter').length})
+                <Trash2 size={15} />
               </button>
             </div>
           </div>
+        ))}
+      </div>
 
-          <div className="table-info-counter">
-            Affichage de {filteredItems.length} ligne{filteredItems.length > 1 ? 's' : ''} • <em>Cliquez sur ✏️ pour modifier</em>
-          </div>
-        </div>
-
-        {/* The Spreadsheet Table */}
+      {/* ======================================================================= */}
+      {/* 2. DESKTOP SPREADSHEET TABLE (Visible on tablets & desktops > 768px)    */}
+      {/* ======================================================================= */}
+      <div className="glass-card table-card-container desktop-table-container">
         <div className="table-responsive-wrapper">
           <table className="custom-travel-table">
             <thead>
@@ -307,7 +417,6 @@ export default function BudgetView() {
             <tbody>
               {filteredItems.map((row) => (
                 <tr key={row.id} className="table-row">
-                  {/* Item Name */}
                   <td className="col-item">
                     <div 
                       className="item-title-text hover:text-sky-400 cursor-pointer flex items-center gap-1.5"
@@ -322,22 +431,18 @@ export default function BudgetView() {
                     )}
                   </td>
 
-                  {/* Prix Total */}
                   <td className="col-price font-semibold text-white">
                     {formatCurrency(row.prixTotal)}
                   </td>
 
-                  {/* Legaults */}
                   <td className="col-family text-sky-400 font-medium">
                     {row.legaults ? formatCurrency(row.legaults) : <span className="empty-dash">—</span>}
                   </td>
 
-                  {/* Synettes */}
                   <td className="col-family text-emerald-400 font-medium">
                     {row.synettes ? formatCurrency(row.synettes) : <span className="empty-dash">—</span>}
                   </td>
 
-                  {/* Statut Dropdown */}
                   <td className="col-status">
                     <select
                       className={`status-select ${
@@ -352,12 +457,10 @@ export default function BudgetView() {
                     </select>
                   </td>
 
-                  {/* Note & Actions */}
                   <td className="col-note">
                     <div className="note-cell-content">
                       <div className="note-text-main">{row.note}</div>
 
-                      {/* Confirmation Code Copy Button */}
                       {row.confirmation && (
                         <div className="confirmation-badge-row">
                           <button 
@@ -380,7 +483,6 @@ export default function BudgetView() {
                         </div>
                       )}
 
-                      {/* Attached Links */}
                       {row.links && row.links.length > 0 && (
                         <div className="note-links-row">
                           {row.links.map((link, idx) => (
@@ -400,7 +502,6 @@ export default function BudgetView() {
                     </div>
                   </td>
 
-                  {/* Actions (Edit / Delete) */}
                   <td className="col-actions text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <button 
@@ -423,7 +524,6 @@ export default function BudgetView() {
               ))}
             </tbody>
 
-            {/* Table Footer Total Row */}
             <tfoot>
               <tr className="table-total-row">
                 <td className="col-item font-bold text-white text-lg">Total</td>
@@ -465,7 +565,7 @@ export default function BudgetView() {
               rel="noreferrer" 
               className="btn-primary"
             >
-              <span>Portail Invité Hostaway</span>
+              <span>Portail Hostaway</span>
               <ExternalLink size={15} />
             </a>
             <a 
@@ -635,7 +735,7 @@ export default function BudgetView() {
                   onClick={() => handleDeleteItem(editingItem.id)}
                 >
                   <Trash2 size={15} />
-                  <span>Supprimer cette ligne</span>
+                  <span>Supprimer</span>
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -643,7 +743,7 @@ export default function BudgetView() {
                     Annuler
                   </button>
                   <button type="submit" className="btn-primary">
-                    Enregistrer les modifications
+                    Enregistrer
                   </button>
                 </div>
               </div>
