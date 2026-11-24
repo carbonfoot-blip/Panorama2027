@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   DollarSign, CheckCircle2, Clock, AlertCircle, Copy, 
-  ExternalLink, Plus, Filter, Download, Check, Sparkles, MapPin, X
+  ExternalLink, Plus, Filter, Download, Check, Sparkles, MapPin, X,
+  Edit2, Trash2, SplitSquareVertical
 } from 'lucide-react';
 import { INITIAL_BUDGET_ITEMS } from '../data/tripData';
 
@@ -19,6 +20,8 @@ export default function BudgetView() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [copiedId, setCopiedId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+
   const [newItem, setNewItem] = useState({
     item: '',
     prixTotal: '',
@@ -49,6 +52,51 @@ export default function BudgetView() {
       }
       return item;
     }));
+  };
+
+  const handleStartEdit = (row) => {
+    setEditingItem({
+      ...row,
+      prixTotal: row.prixTotal !== undefined ? String(row.prixTotal) : '',
+      legaults: row.legaults !== undefined ? String(row.legaults) : '',
+      synettes: row.synettes !== undefined ? String(row.synettes) : '',
+      confirmation: row.confirmation || '',
+      note: row.note || ''
+    });
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    if (!editingItem || !editingItem.item) return;
+
+    const total = parseFloat(editingItem.prixTotal) || 0;
+    const leg = parseFloat(editingItem.legaults) || 0;
+    const syn = parseFloat(editingItem.synettes) || 0;
+
+    setItems(prev => prev.map(item => {
+      if (item.id === editingItem.id) {
+        return {
+          ...item,
+          item: editingItem.item,
+          prixTotal: total,
+          legaults: leg,
+          synettes: syn,
+          statut: editingItem.statut,
+          confirmation: editingItem.confirmation,
+          note: editingItem.note
+        };
+      }
+      return item;
+    }));
+
+    setEditingItem(null);
+  };
+
+  const handleDeleteItem = (id) => {
+    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette ligne du tableau ?")) {
+      setItems(prev => prev.filter(i => i.id !== id));
+      if (editingItem?.id === id) setEditingItem(null);
+    }
   };
 
   const handleAddItem = (e) => {
@@ -128,7 +176,7 @@ export default function BudgetView() {
           </div>
           <h1 className="section-title">Sommaire & Réservations</h1>
           <p className="section-desc">
-            Toutes les dépenses pré-voyage, billets de ski, hébergement et confirmations officielles pour les Legaults et les Synettes.
+            Toutes les dépenses pré-voyage, billets de ski, hébergement et confirmations officielles pour les Legaults et les Synettes. Vous pouvez modifier ou ajouter des lignes à tout moment.
           </p>
         </div>
 
@@ -181,7 +229,7 @@ export default function BudgetView() {
           </div>
           <div className="kpi-amount text-sky-400">{formatCurrency(totalLegaults)}</div>
           <p className="kpi-note">
-            Comprend vols (1 628 $), moitié hébergement (1 677,88 $), ski adultes & enfants (1 423,80 $), Rav4 #2 (272 $)
+            Vols, part du condo Aisling Baile, billets de ski adultes & enfants, location Rav4 #2.
           </p>
         </div>
 
@@ -197,7 +245,7 @@ export default function BudgetView() {
           </div>
           <div className="kpi-amount text-emerald-400">{formatCurrency(totalSynettes)}</div>
           <p className="kpi-note">
-            Comprend vol (814 $), moitié hébergement (1 677,88 $), ski seniors (795,90 $), Rav4 #1 (272 $)
+            Vol, part du condo Aisling Baile, billets de ski seniors, location Rav4 #1.
           </p>
         </div>
       </div>
@@ -238,7 +286,7 @@ export default function BudgetView() {
           </div>
 
           <div className="table-info-counter">
-            Affichage de {filteredItems.length} ligne{filteredItems.length > 1 ? 's' : ''}
+            Affichage de {filteredItems.length} ligne{filteredItems.length > 1 ? 's' : ''} • <em>Cliquez sur ✏️ pour modifier</em>
           </div>
         </div>
 
@@ -253,6 +301,7 @@ export default function BudgetView() {
                 <th className="col-family text-emerald-300">Synettes</th>
                 <th className="col-status">Statut</th>
                 <th className="col-note">Notes & Confirmations</th>
+                <th className="col-actions text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -260,7 +309,14 @@ export default function BudgetView() {
                 <tr key={row.id} className="table-row">
                   {/* Item Name */}
                   <td className="col-item">
-                    <div className="item-title-text">{row.item}</div>
+                    <div 
+                      className="item-title-text hover:text-sky-400 cursor-pointer flex items-center gap-1.5"
+                      onClick={() => handleStartEdit(row)}
+                      title="Cliquer pour modifier"
+                    >
+                      <span>{row.item}</span>
+                      <Edit2 size={12} className="text-slate-500 opacity-60 hover:opacity-100" />
+                    </div>
                     {row.vehicle && (
                       <span className="item-sub-tag">{row.vehicle}</span>
                     )}
@@ -343,6 +399,26 @@ export default function BudgetView() {
                       )}
                     </div>
                   </td>
+
+                  {/* Actions (Edit / Delete) */}
+                  <td className="col-actions text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button 
+                        className="btn-action-icon hover:text-sky-400" 
+                        onClick={() => handleStartEdit(row)}
+                        title="Modifier tous les champs de cette ligne"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button 
+                        className="btn-action-icon hover:text-rose-400" 
+                        onClick={() => handleDeleteItem(row.id)}
+                        title="Supprimer cette ligne"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -360,7 +436,7 @@ export default function BudgetView() {
                 <td className="col-family font-bold text-emerald-400 text-lg">
                   {formatCurrency(totalSynettes)}
                 </td>
-                <td colSpan={2} className="text-right text-slate-400 font-medium">
+                <td colSpan={3} className="text-right text-slate-400 font-medium">
                   {items.filter(i => i.statut === 'Payé').length} payés sur {items.length} items
                 </td>
               </tr>
@@ -405,7 +481,180 @@ export default function BudgetView() {
         </div>
       </div>
 
-      {/* Add Item Modal */}
+      {/* ========================================================================= */}
+      {/* EDIT ITEM MODAL                                                          */}
+      {/* ========================================================================= */}
+      {editingItem && (
+        <div className="modal-overlay" onClick={() => setEditingItem(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="flex items-center gap-2">
+                <Edit2 size={20} className="text-sky-400" />
+                <h2 className="modal-title">Modifier la ligne</h2>
+              </div>
+              <button className="btn-action-icon" onClick={() => setEditingItem(null)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="modal-form">
+              <div className="form-group">
+                <label>Nom de l'item</label>
+                <input
+                  type="text"
+                  required
+                  value={editingItem.item}
+                  onChange={(e) => setEditingItem({ ...editingItem, item: e.target.value })}
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Prix Total ($ CAD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={editingItem.prixTotal}
+                    onChange={(e) => setEditingItem({ ...editingItem, prixTotal: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Statut</label>
+                  <select
+                    value={editingItem.statut}
+                    onChange={(e) => setEditingItem({ ...editingItem, statut: e.target.value })}
+                  >
+                    <option value="Payé">Payé</option>
+                    <option value="Booké, pas payé">Booké, pas payé</option>
+                    <option value="À acheter">À acheter</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Quick Split Helpers */}
+              <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
+                <span className="text-xs font-bold text-slate-400 block mb-2">
+                  Aide au calcul de la répartition :
+                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    className="btn-secondary btn-sm"
+                    onClick={() => {
+                      const total = parseFloat(editingItem.prixTotal) || 0;
+                      const half = (total / 2).toFixed(2);
+                      setEditingItem({
+                        ...editingItem,
+                        legaults: half,
+                        synettes: half
+                      });
+                    }}
+                  >
+                    50 / 50 Égal ({(parseFloat(editingItem.prixTotal) / 2 || 0).toFixed(2)} $ ch.)
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-secondary btn-sm"
+                    onClick={() => {
+                      const total = parseFloat(editingItem.prixTotal) || 0;
+                      setEditingItem({
+                        ...editingItem,
+                        legaults: total.toFixed(2),
+                        synettes: '0.00'
+                      });
+                    }}
+                  >
+                    100% Legaults
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-secondary btn-sm"
+                    onClick={() => {
+                      const total = parseFloat(editingItem.prixTotal) || 0;
+                      setEditingItem({
+                        ...editingItem,
+                        legaults: '0.00',
+                        synettes: total.toFixed(2)
+                      });
+                    }}
+                  >
+                    100% Synettes
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-row mt-2">
+                <div className="form-group">
+                  <label className="text-sky-300 font-semibold">Part Legaults ($ CAD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editingItem.legaults}
+                    onChange={(e) => setEditingItem({ ...editingItem, legaults: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="text-emerald-300 font-semibold">Part Synettes ($ CAD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editingItem.synettes}
+                    onChange={(e) => setEditingItem({ ...editingItem, synettes: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Numéro de confirmation (pour copie rapide en 1 clic)</label>
+                <input
+                  type="text"
+                  placeholder="Ex: GFVTXR, PR262369, 71859146..."
+                  value={editingItem.confirmation}
+                  onChange={(e) => setEditingItem({ ...editingItem, confirmation: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Notes & détails (courriel, liens, adresses...)</label>
+                <textarea
+                  rows="3"
+                  value={editingItem.note}
+                  onChange={(e) => setEditingItem({ ...editingItem, note: e.target.value })}
+                />
+              </div>
+
+              <div className="modal-actions flex items-center justify-between">
+                <button 
+                  type="button" 
+                  className="btn-secondary hover:text-rose-400"
+                  onClick={() => handleDeleteItem(editingItem.id)}
+                >
+                  <Trash2 size={15} />
+                  <span>Supprimer cette ligne</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button type="button" className="btn-secondary" onClick={() => setEditingItem(null)}>
+                    Annuler
+                  </button>
+                  <button type="submit" className="btn-primary">
+                    Enregistrer les modifications
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* ADD ITEM MODAL                                                            */}
+      {/* ========================================================================= */}
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>

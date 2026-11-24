@@ -39,8 +39,8 @@ export default function HomeView({ setActiveTab }) {
       <section className="hero-section glass-card">
         <div className="hero-image-overlay"></div>
         <img 
-          src="https://images.unsplash.com/photo-1551524559-8af4e6624178?auto=format&fit=crop&w=1600&q=85" 
-          alt="Panorama Mountain Resort" 
+          src="https://www.panoramaresort.com/assets/Uploads/Home-Taynton-2.jpg" 
+          alt="Panorama Mountain Resort - Taynton Bowl" 
           className="hero-bg-img"
         />
 
