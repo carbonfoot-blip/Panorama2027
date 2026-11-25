@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import HomeView from './components/HomeView';
 import BudgetView from './components/BudgetView';
-import SurpriseView from './components/SurpriseView';
-import ExpensesView from './components/ExpensesView';
+import TeasersView from './components/TeasersView';
+import GroceryView from './components/GroceryView';
 import PhotosView from './components/PhotosView';
+import ExpensesView from './components/ExpensesView';
+import SurpriseView from './components/SurpriseView';
 import { Mountain, Heart, Snowflake } from 'lucide-react';
 import './App.css';
 
@@ -24,9 +26,11 @@ export default function App() {
       <main className="main-content">
         {activeTab === 'home' && <HomeView setActiveTab={setActiveTab} />}
         {activeTab === 'budget' && <BudgetView />}
-        {activeTab === 'surprise' && <SurpriseView />}
-        {activeTab === 'expenses' && <ExpensesView />}
+        {activeTab === 'teasers' && <TeasersView />}
+        {activeTab === 'grocery' && <GroceryView />}
         {activeTab === 'photos' && <PhotosView />}
+        {activeTab === 'expenses' && <ExpensesView />}
+        {activeTab === 'surprise' && <SurpriseView />}
       </main>
 
       {/* Footer */}

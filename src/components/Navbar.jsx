@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Mountain, LayoutDashboard, Gift, Scale, Camera, Clock } from 'lucide-react';
+import { 
+  Mountain, LayoutDashboard, Gift, Scale, Camera, Clock, 
+  Flame, UtensilsCrossed 
+} from 'lucide-react';
 import { TRIP_METADATA } from '../data/tripData';
 
 export default function Navbar({ activeTab, setActiveTab }) {
@@ -41,13 +44,12 @@ export default function Navbar({ activeTab, setActiveTab }) {
           </button>
 
           {/* Desktop Navigation Tabs (Hidden on mobile) */}
-          {/* Order: Accueil -> Sommaire -> Photos -> Splitwise -> Surprise Noël 🎁 */}
           <nav className="nav-tabs desktop-only-nav">
             <button
               className={`nav-tab-btn ${activeTab === 'home' ? 'active' : ''}`}
               onClick={() => setActiveTab('home')}
             >
-              <Mountain size={17} />
+              <Mountain size={16} />
               <span>Accueil</span>
             </button>
 
@@ -55,15 +57,31 @@ export default function Navbar({ activeTab, setActiveTab }) {
               className={`nav-tab-btn ${activeTab === 'budget' ? 'active' : ''}`}
               onClick={() => setActiveTab('budget')}
             >
-              <LayoutDashboard size={17} />
-              <span>Sommaire &amp; Réservations</span>
+              <LayoutDashboard size={16} />
+              <span>Sommaire</span>
+            </button>
+
+            <button
+              className={`nav-tab-btn ${activeTab === 'teasers' ? 'active' : ''}`}
+              onClick={() => setActiveTab('teasers')}
+            >
+              <Flame size={16} className="text-amber-400" />
+              <span>Teasers 🔥</span>
+            </button>
+
+            <button
+              className={`nav-tab-btn ${activeTab === 'grocery' ? 'active' : ''}`}
+              onClick={() => setActiveTab('grocery')}
+            >
+              <UtensilsCrossed size={16} />
+              <span>Épicerie</span>
             </button>
 
             <button
               className={`nav-tab-btn ${activeTab === 'photos' ? 'active' : ''}`}
               onClick={() => setActiveTab('photos')}
             >
-              <Camera size={17} />
+              <Camera size={16} />
               <span>Photos</span>
             </button>
 
@@ -71,7 +89,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
               className={`nav-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
               onClick={() => setActiveTab('expenses')}
             >
-              <Scale size={17} />
+              <Scale size={16} />
               <span>Splitwise</span>
             </button>
 
@@ -79,8 +97,8 @@ export default function Navbar({ activeTab, setActiveTab }) {
               className={`nav-tab-btn surprise-btn ${activeTab === 'surprise' ? 'active' : ''}`}
               onClick={() => setActiveTab('surprise')}
             >
-              <Gift size={17} className={activeTab === 'surprise' ? '' : 'surprise-sparkle'} />
-              <span>Surprise Noël 🎁</span>
+              <Gift size={16} className={activeTab === 'surprise' ? '' : 'surprise-sparkle'} />
+              <span>Surprise 🎁</span>
             </button>
           </nav>
 
@@ -95,9 +113,8 @@ export default function Navbar({ activeTab, setActiveTab }) {
       </header>
 
       {/* Mobile Bottom Navigation Bar (iOS / iPhone Style) */}
-      {/* Order: Accueil -> Sommaire -> Photos -> Splitwise -> Surprise 🎁 */}
       <nav className="mobile-bottom-nav">
-        <div className="mobile-nav-inner">
+        <div className="mobile-nav-inner mobile-nav-scrollable">
           <button
             className={`mobile-nav-item ${activeTab === 'home' ? 'active' : ''}`}
             onClick={() => {
@@ -105,7 +122,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
-            <Mountain size={20} />
+            <Mountain size={18} />
             <span>Accueil</span>
           </button>
 
@@ -116,8 +133,30 @@ export default function Navbar({ activeTab, setActiveTab }) {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
-            <LayoutDashboard size={20} />
+            <LayoutDashboard size={18} />
             <span>Sommaire</span>
+          </button>
+
+          <button
+            className={`mobile-nav-item ${activeTab === 'teasers' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('teasers');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            <Flame size={18} className="text-amber-400" />
+            <span>Teasers</span>
+          </button>
+
+          <button
+            className={`mobile-nav-item ${activeTab === 'grocery' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('grocery');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            <UtensilsCrossed size={18} />
+            <span>Épicerie</span>
           </button>
 
           <button
@@ -127,7 +166,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
-            <Camera size={20} />
+            <Camera size={18} />
             <span>Photos</span>
           </button>
 
@@ -138,7 +177,7 @@ export default function Navbar({ activeTab, setActiveTab }) {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
-            <Scale size={20} />
+            <Scale size={18} />
             <span>Splitwise</span>
           </button>
 
@@ -150,9 +189,9 @@ export default function Navbar({ activeTab, setActiveTab }) {
             }}
           >
             <div className="mobile-surprise-circle">
-              <Gift size={20} />
+              <Gift size={16} />
             </div>
-            <span>Surprise 🎁</span>
+            <span>Surprise</span>
           </button>
         </div>
       </nav>
